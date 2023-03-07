@@ -32,23 +32,22 @@ Finally, you can build the image:
 Now, it's normal Distrobox usage. Let's create the box and enter:
 
     $ mkdir -p ~/.local/share/distrobox/webdevbox
-    $ distrobox create -i akitaonrails/webdevbox \
+    $ distrobox create 
+      -i akitaonrails/webdevbox \
+      -n webdevbox-demo -I \
+    $ distrobox enter webdevbox-demo
+
+*WARNING:* Distrobox automatically maps its internal home directory directly on top of your real home. It will also automatically create a user with the same username,
+so it should be very seamleass to transition between them. But be careful that whatever destructive command you run over your home files, will be
+permanent. If you prefer not to expose your home directory directly, you can point the internal home to somewhere else, like this:
+
+    $ distrobox create 
+      -i akitaonrails/webdevbox \
       -n webdevbox-demo -I \
       -H ~/.local/share/distrobox/webdevbox \
       --volume /home/akitaonrails:/mnt/host
-    $ distrobox enter webdevbox-demo
 
-
-*IMPORTANT:* I don't like Distrobox's default behavior of mapping the internal home directory directly on top of your real home directory. I had accidents of running things in the box, forgetting about this just to realize I had screwed up my home files. Luckily I use BTRFS with scheduled snapshots so I could easily rollback. But it's an unnecessary risk.
-
-Instead I prefer to map to a new directory and have a separated home per box. Then map my home as an external drive in "/mnt/host".
-
-2 things to do inside the box:
-
-    # sudo chown -R $UID:$GID ~/.local
-    # sudo chown -R $UID:$GID ~/.config
-
-This is possibly a Distrobox bug. It copies the `/etc/skel` files as I wanted but failed to change the ownership. So do it manually as shown above.
+I prefer to map to a new directory and have a separated home per box. Then map my home as an external drive in "/mnt/host".
 
 Then we can initialize [Chezmoi](https://www.chezmoi.io/). I'd recommend first forking my [dotfiles repository](https://github.com/akitaonrails/dotfiles), but let's use it as example:
 
@@ -56,6 +55,13 @@ Then we can initialize [Chezmoi](https://www.chezmoi.io/). I'd recommend first f
     $ chezmoi update
 
 It will prompt you for your specific information such as preferred Git email. I configured Tmux to have the key bind "Ctrl+Alt+n" to open a new pane directly to some documents folder to serve as a shortcut for times when you want to make quick notes or add reminders. I usually point to my Dropbox synced Obsidian directory, for example.
+
+And if you want to run podman inside Distrobox (yes! you can run a new container inside another container, podman is already configured to run rootless inside), and if you chose
+to map your home directory directly to your real home, then make sure to create the volume for the containers:
+
+    $ mkdir -p $HOME/.local/share/containers/storage/
+
+Whenere you `podman pull` inside the Box, the blobs will be stored there, so not to bloat the image
 
 And that's it. You can start working!
 
