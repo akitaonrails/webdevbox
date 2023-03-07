@@ -77,40 +77,13 @@ RUN pacman -Syyu --noconfirm \
         zsh-syntax-highlighting \
         zsh-theme-powerlevel10k \
     ; pacman -Rns $(pacman -Qtdq) \
-    ; pacman -Sc --noconfirm
+    ; pacman -Scc --noconfirm \
+    ; rm -Rf /var/cache/pacman/pkg/*
 
 RUN archlinux-java set java-8-openjdk
 
-# configure podman for rootless
-RUN useradd podman \
-    ; echo podman:10000:10000 > /etc/subuid \
-    ; echo podman:10000:10000 > /etc/subgid
-
-VOLUME /var/lib/containers
-VOLUME /home/podman/.local/share/containers
-
-ADD containers.conf /etc/containers/containers.conf
-ADD podman-containers.conf /home/podman/.config/containers/containers.conf
-
-RUN chown podman:podman -R /home/podman
-
-# chmod containers.conf and adjust storage.conf to enable Fuse storage.
-RUN chmod 644 /etc/containers/containers.conf \
-    ; sed -i -e 's|^#mount_program|mount_program|g' \
-    -e '/additionalimage.*/a "/var/lib/shared",' \
-    -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
-    /etc/containers/storage.conf
-
-RUN mkdir -p /var/lib/shared/overlay-images \
-    /var/lib/shared/overlay-layers \
-    /var/lib/shared/vfs-images \
-    /var/lib/shared/vfs-layers \
-    ; touch /var/lib/shared/overlay-images/images.lock \
-    ; touch /var/lib/shared/overlay-layers/layers.lock \
-    ; touch /var/lib/shared/vfs-images/images.lock \
-    ; touch /var/lib/shared/vfs-layers/layers.lock
-
-ENV _CONTAINERS_USERNS_CONFIGURED=""
+# optional directory to mount the host's home directory
+RUN mkdir -p /mnt/host
 
 # Install Yay and continue with it
 FROM update-mirrors as build-helper-img
@@ -122,24 +95,29 @@ ARG NEOVIM_VERSION=0.8
 ADD add-aur.sh /root
 RUN bash /root/add-aur.sh ${AUR_USER} ${HELPER}
 
+# azure and google packages, each are more than 600 MB, uncompressed
+# insomnia and postman, are also each larger than 300 MB
+# dunno if they're worth having built-in. leaving just insomnia
 RUN aur-install \
         asdf-vm \
         aws-cli \
-        azure-cli \
-        google-cloud-sdk \
-        heroku-cli \
+        # azure-cli-bin \ 
+        # google-cloud-sdk \ heroku-cli-bin \
         insomnia-bin \
         kubectl-bin \
         kustomize-bin \
         openshift-client-bin \
-        postman-bin \
+        # postman-bin \
         skaffold-bin \
         terragrunt \
+        tldr \
         wrk \
         zsh-git-prompt \
         zsh-vi-mode \
     ; pacman -Rns $(pacman -Qtdq) \
-    ; pacman -Sc --noconfirm
+    ; pacman -Scc --noconfirm \
+    ; rm -Rf .cache/yay/* \
+    ; rm -Rf /var/cache/foreign-pkg/*
 
 RUN source /opt/asdf-vm/asdf.sh \
     && asdf plugin-add crystal \
@@ -171,12 +149,43 @@ RUN LV_BRANCH="release-${LUNARVIM_VERSION}/neovim-${NEOVIM_VERSION}" \
     && sed 's/\/root/$HOME/g' -i /etc/skel/.local/bin/lvim
 
 COPY config.lua /etc/skel/.config/lvim
+COPY initial_setup.zsh /etc/skel/.zshrc
 
-# I don't know if this is necessary, seems like Distrobox has a bug in 
-# distrobox-init where it manually copies from /etc/skel but fails to chown
-# but setting it here doesn't appear to solve it either
-RUN chown -R 1000:1000 /etc/skel/.local \
-    && chown -R 1000:1000 /etc/skel/.config
+USER root
+RUN touch /var/tmp/first-time.lock
+
+# configure podman for rootless
+RUN groupadd --system podman \
+    && useradd --system --shell /usr/bin/nologin --create-home --home-dir /home/podman podman -g podman \
+    && echo podman:10000:65536 > /etc/subuid \
+    && echo podman:10000:65536 > /etc/subgid
+
+VOLUME /var/lib/containers
+VOLUME /home/podman/.local/share/containers
+
+ADD containers.conf /etc/containers/containers.conf
+ADD podman-containers.conf /home/podman/.config/containers/containers.conf
+
+RUN chown podman:podman -R /home/podman
+
+# chmod containers.conf and adjust storage.conf to enable Fuse storage.
+RUN chmod 644 /etc/containers/containers.conf \
+    ; sed -i -e 's|^#mount_program|mount_program|g' \
+    -e '/additionalimage.*/a "/var/lib/shared",' \
+    -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
+    -e '/#ignore_chown_errors = false/ignore_chown_errors = true/g' \
+    /etc/containers/storage.conf
+
+RUN mkdir -p /var/lib/shared/overlay-images \
+    /var/lib/shared/overlay-layers \
+    /var/lib/shared/vfs-images \
+    /var/lib/shared/vfs-layers \
+    ; touch /var/lib/shared/overlay-images/images.lock \
+    ; touch /var/lib/shared/overlay-layers/layers.lock \
+    ; touch /var/lib/shared/vfs-images/images.lock \
+    ; touch /var/lib/shared/vfs-layers/layers.lock
+
+ENV _CONTAINERS_USERNS_CONFIGURED=""
 
 RUN echo "source /opt/asdf-vm/asdf.sh" >> /etc/profile ;\
     sed 's/PATH=/PATH=$HOME\/.local\/bin/g' -i /etc/profile
