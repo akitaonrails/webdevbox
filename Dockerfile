@@ -20,6 +20,7 @@ RUN pacman -Syyu --noconfirm \
         cifs-utils \
         curl \
         elixir \
+        exa \
         fd \
         ffmpeg \
         fish \
@@ -59,9 +60,11 @@ RUN pacman -Syyu --noconfirm \
         rust \
         starship \
         strace \
+        sqlite3 \
         sudo \
         terraform \
         tmux \
+        tmuxp \
         unzip \
         wget \
         wl-clipboard \
@@ -76,6 +79,40 @@ RUN pacman -Syyu --noconfirm \
     ; pacman -Rns $(pacman -Qtdq) \
     ; pacman -Sc --noconfirm
 
+RUN archlinux-java set java-8-openjdk
+
+# configure podman for rootless
+RUN useradd podman \
+    ; echo podman:10000:10000 > /etc/subuid \
+    ; echo podman:10000:10000 > /etc/subgid
+
+VOLUME /var/lib/containers
+VOLUME /home/podman/.local/share/containers
+
+ADD containers.conf /etc/containers/containers.conf
+ADD podman-containers.conf /home/podman/.config/containers/containers.conf
+
+RUN chown podman:podman -R /home/podman
+
+# chmod containers.conf and adjust storage.conf to enable Fuse storage.
+RUN chmod 644 /etc/containers/containers.conf \
+    ; sed -i -e 's|^#mount_program|mount_program|g' \
+    -e '/additionalimage.*/a "/var/lib/shared",' \
+    -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
+    /etc/containers/storage.conf
+
+RUN mkdir -p /var/lib/shared/overlay-images \
+    /var/lib/shared/overlay-layers \
+    /var/lib/shared/vfs-images \
+    /var/lib/shared/vfs-layers \
+    ; touch /var/lib/shared/overlay-images/images.lock \
+    ; touch /var/lib/shared/overlay-layers/layers.lock \
+    ; touch /var/lib/shared/vfs-images/images.lock \
+    ; touch /var/lib/shared/vfs-layers/layers.lock
+
+ENV _CONTAINERS_USERNS_CONFIGURED=""
+
+# Install Yay and continue with it
 FROM update-mirrors as build-helper-img
 ARG AUR_USER=builduser
 ARG HELPER=yay
@@ -91,10 +128,13 @@ RUN aur-install \
         azure-cli \
         google-cloud-sdk \
         heroku-cli \
+        insomnia-bin \
         kubectl-bin \
         kustomize-bin \
         openshift-client-bin \
+        postman-bin \
         skaffold-bin \
+        terragrunt \
         wrk \
         zsh-git-prompt \
         zsh-vi-mode \
@@ -114,7 +154,6 @@ RUN source /opt/asdf-vm/asdf.sh \
     && asdf plugin-add lua \
     && asdf plugin-add nim \
     && asdf plugin-add nodejs \
-    && asdf plugin-add perl \
     && asdf plugin-add php \
     && asdf plugin-add python \
     && asdf plugin-add ruby \
@@ -133,12 +172,13 @@ RUN LV_BRANCH="release-${LUNARVIM_VERSION}/neovim-${NEOVIM_VERSION}" \
 
 COPY config.lua /etc/skel/.config/lvim
 
+# I don't know if this is necessary, seems like Distrobox has a bug in 
+# distrobox-init where it manually copies from /etc/skel but fails to chown
+# but setting it here doesn't appear to solve it either
 RUN chown -R 1000:1000 /etc/skel/.local \
     && chown -R 1000:1000 /etc/skel/.config
 
 RUN echo "source /opt/asdf-vm/asdf.sh" >> /etc/profile ;\
     sed 's/PATH=/PATH=$HOME\/.local\/bin/g' -i /etc/profile
-
-RUN archlinux-java set java-8-openjdk
 
 CMD ["/bin/zsh"]

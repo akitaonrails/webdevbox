@@ -57,13 +57,63 @@ Then we can initialize [Chezmoi](https://www.chezmoi.io/). I'd recommend first f
 
 It will prompt you for your specific information such as preferred Git email. I configured Tmux to have the key bind "Ctrl+Alt+n" to open a new pane directly to some documents folder to serve as a shortcut for times when you want to make quick notes or add reminders. I usually point to my Dropbox synced Obsidian directory, for example.
 
-And that's it. You can start working! Things to highlight:
+And that's it. You can start working!
 
-* Type `git la` to see the git aliases I configured
-* Read the `.tmux.conf` file to see what features I added
-* Read the `.config/lvim/config.lua` file to see what plugins I have added
-* LunarVim and Tmux are integrated so "Ctrl-(arrows)" will move your cursor not only between LunarVim panes, but also across Tmux panes!
-* The first time you start LunarVim it will take a while for Packer to install its plugins
+## FAQ
+
+### Did you configure Git Aliases?
+
+Yes, type `git la` to have a list of all the built-in aliases
+
+### How do I navigate in Tmux?
+
+The navigation keybinding are diffent. The same Ctrl+[hjkl] are used to navigate between
+both Tmux panels and LunarVim panels.
+
+I also configured navigaton in copy mode to be like Vim (hjkl).
+
+Do read [.tmux.conf](https://github.com/akitaonrails/dotfiles/blob/main/dot_tmux.conf.tmpl) from my dotfiles repo.
+
+### Did you customize LunarVim?
+
+LunarVim is mostly stock. I did add a few plugins such as GitHub CoPilot and ChatGPT.
+
+Do read [config.lua](config.lua), and go to the bottom of the file to see what I changed.
+
+### Why didn't you install virtualenv, nvm or rvm?
+
+Because the box comes with the much superior [ASDF](https://asdf-vm.com/guide/getting-started.html).
+
+### Why do you install the pacman language packages if you installed ASDF?
+
+The best practice is to have the native packages in the OS do their job. Only configure
+custom language versions from asdf per project. For example:
+
+    $ cd my_project
+    $ asdf install ruby 2.6.0
+    $ asdf local ruby 2.6.0
+
+Now only this project directory responds to the specific obsolete Ruby 2.6.
+
+### Why Chezmoi to manage dotfiles?
+
+Because it felt simple. You should always edit dotfiles in the `~/.local/share/chezmoi` directory and add information specific to your machine in `~/.config/chezmoi/chezmoi.toml`.
+
+If you created a new dotfile, add it to the repository:
+
+    $ chezmoi add --autotemplate .fishrc
+
+If you changed some file in the `local/share` directory, update your real files with:
+
+    $ chezmoi update
+
+When everything is working, push to your fork of my dotfiles with:
+
+    $ chezmoi cd
+    $ git add . ; git commit -m "description" ; git push origin main
+    $ exit
+
+Read [their documentation](https://www.chezmoi.io/)
 
 Happy Hacking!
 
