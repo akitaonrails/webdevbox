@@ -13,6 +13,7 @@ RUN get-new-mirrors
 RUN pacman -Syyu --noconfirm \
         aardvark-dns \
         apparmor \
+        atuin \
         base-devel \
         bat \
         chromium \
@@ -26,6 +27,7 @@ RUN pacman -Syyu --noconfirm \
         fish \
         fzf \
         fuse-overlayfs \
+        gitlab-runner \
         git \
         git-lfs \
         go \
@@ -35,6 +37,7 @@ RUN pacman -Syyu --noconfirm \
         lsof \
         jdk11-openjdk \
         jdk8-openjdk \
+        jq \
         mariadb-clients \
         memcached \
         neovim \
@@ -92,7 +95,7 @@ ARG HELPER=yay
 ARG LUNARVIM_VERSION=1.2
 ARG NEOVIM_VERSION=0.8
 
-ADD add-aur.sh /root
+ADD helpers/add-aur.sh /root
 RUN bash /root/add-aur.sh ${AUR_USER} ${HELPER}
 
 # azure and google packages, each are more than 600 MB, uncompressed
@@ -148,8 +151,9 @@ RUN LV_BRANCH="release-${LUNARVIM_VERSION}/neovim-${NEOVIM_VERSION}" \
     && mv /root/.local/bin/lvim /etc/skel/.local/bin/lvim \
     && sed 's/\/root/$HOME/g' -i /etc/skel/.local/bin/lvim
 
-COPY config.lua /etc/skel/.config/lvim
-COPY initial_setup.zsh /etc/skel/.zshrc
+COPY helpers/config.lua /etc/skel/.config/lvim
+COPY helpers/webdevbox.zsh /etc/skel/.config/zsh/webdevbox.zsh
+COPY helpers/initial_setup.zsh /etc/skel/.zshrc
 
 USER root
 RUN touch /var/tmp/first-time.lock
@@ -163,8 +167,8 @@ RUN groupadd --system podman \
 VOLUME /var/lib/containers
 VOLUME /home/podman/.local/share/containers
 
-ADD containers.conf /etc/containers/containers.conf
-ADD podman-containers.conf /home/podman/.config/containers/containers.conf
+ADD helpers/containers.conf /etc/containers/containers.conf
+ADD helpers/podman-containers.conf /home/podman/.config/containers/containers.conf
 
 RUN chown podman:podman -R /home/podman
 
