@@ -9,6 +9,8 @@
 
 ```
 
+[![WebDevBox DemoTEXT](https://github.com/akitaonrails/webdevbox/raw/main/helpers/intro.png)](https://player.vimeo.com/video/805780923?h=ddd98118f0 "WebDevBox Demo")
+
 ## Distrobox WebDevBox
 
 This is an Archlinux based Docker image that comes pre-installed with
@@ -167,6 +169,18 @@ llvm-libs: 120.5 MiB
 erlang-nox: 105.8 MiB
 ===========================================
 ```
+
+### I'm receiving errors from Podman or Podman Compose
+
+If you see errors similar to this:
+
+`ERRO[0000] running `/usr/sbin/newuidmap 25137 0 1000 1 1 75537 65535`: newuidmap: write to uid_map failed: Operation not permitted`
+
+Then run this in the terminal:
+
+    $ __webdevbox_podman_config
+
+The initial welcome script already runs this, but for some reason the error comes back until we run this again.
 
 Happy Hacking!
 

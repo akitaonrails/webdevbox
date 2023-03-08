@@ -143,12 +143,14 @@ RUN source /opt/asdf-vm/asdf.sh \
     && asdf plugin-add zig 
 
 RUN LV_BRANCH="release-${LUNARVIM_VERSION}/neovim-${NEOVIM_VERSION}" \
-    bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/fc6873809934917b470bff1b072171879899a36b/utils/installer/install.sh) -y \
-    && mkdir -p /etc/skel/.local/share \
+    bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/fc6873809934917b470bff1b072171879899a36b/utils/installer/install.sh) -y
+
+RUN mkdir -p /etc/skel/.local/share \
     && mkdir -p /etc/skel/.local/bin \
     && mkdir -p /etc/skel/.config/lvim \
     && mv /root/.local/share/lunarvim /etc/skel/.local/share/lunarvim \
     && mv /root/.local/bin/lvim /etc/skel/.local/bin/lvim \
+    && mv /root/.asdf /etc/skel/ \
     && sed 's/\/root/$HOME/g' -i /etc/skel/.local/bin/lvim
 
 COPY helpers/config.lua /etc/skel/.config/lvim

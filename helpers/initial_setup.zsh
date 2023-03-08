@@ -3,6 +3,7 @@ source $HOME/.config/zsh/webdevbox.zsh
 if [ -f /var/tmp/first-time.lock ]; then
   sudo chown -R $UID:$GID $HOME/.config
   sudo chown -R $UID:$GID $HOME/.local
+  sudo chown -R $UID:$GID $HOME/.asdf
   __webdevbox_podman_config
 
   echo "Welcome to webDevBox"
