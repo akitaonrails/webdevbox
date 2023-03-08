@@ -105,7 +105,7 @@ Do read [.tmux.conf](https://github.com/akitaonrails/dotfiles/blob/main/dot_tmux
 
 LunarVim is mostly stock. I did add a few plugins such as GitHub CoPilot and ChatGPT.
 
-Do read [config.lua](config.lua), and go to the bottom of the file to see what I changed.
+Do read [config.lua](helpers/config.lua), and go to the bottom of the file to see what I changed.
 
 ### Why didn't you install virtualenv, nvm or rvm?
 

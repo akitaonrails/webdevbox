@@ -20,6 +20,7 @@ RUN pacman -Syyu --noconfirm \
         chezmoi \
         cifs-utils \
         curl \
+        dust \
         elixir \
         exa \
         fd \
@@ -53,6 +54,7 @@ RUN pacman -Syyu --noconfirm \
         podman-docker \
         podman-dnsname \
         postgresql-libs \
+        procs \
         python-pip \
         python-numpy \
         python-pandas \
@@ -74,6 +76,7 @@ RUN pacman -Syyu --noconfirm \
         xsel \
         xclip \
         yarn \
+        zellij \
         zsh-autosuggestions \
         zsh-completions \
         zsh-history-substring-search \
@@ -105,6 +108,7 @@ RUN aur-install \
         asdf-vm \
         aws-cli \
         # azure-cli-bin \ 
+        fselect-bin \
         # google-cloud-sdk \ heroku-cli-bin \
         insomnia-bin \
         kubectl-bin \
@@ -114,6 +118,7 @@ RUN aur-install \
         skaffold-bin \
         terragrunt \
         tldr \
+        urlview \
         wrk \
         zsh-git-prompt \
         zsh-vi-mode \
