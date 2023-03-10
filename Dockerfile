@@ -35,6 +35,7 @@ RUN pacman -Syyu --noconfirm \
         helm \
         htop \
         imagemagick \
+        links \
         lsof \
         jdk11-openjdk \
         jdk8-openjdk \

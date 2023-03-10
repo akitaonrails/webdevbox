@@ -49,16 +49,18 @@ Or you can customize the Dockerfile and build it manually:
 Finally, it's normal Distrobox usage. Let's create the box and enter in it:
 
     $ mkdir -p ~/.local/share/distrobox/webdevbox
-    $ distrobox create 
+
+    $ distrobox create \
       -i akitaonrails/webdevbox \
       -n webdevbox-demo -I \
+
     $ distrobox enter webdevbox-demo
 
 *WARNING:* Distrobox maps its internal home directory directly on top of your real home by default. It will automatically create a user with the same username as you are using right now,
 so it should be very seamleass to transition between them. But be careful that whatever destructive command you run over your home files, will be
 permanent. If you prefer not to expose your home directory directly, you can point the internal home to somewhere else, like this:
 
-    $ distrobox create 
+    $ distrobox create \
       -i akitaonrails/webdevbox \
       -n webdevbox-demo -I \
       -H ~/.local/share/distrobox/webdevbox \
