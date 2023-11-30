@@ -6,9 +6,10 @@ RUN pacman-key --init \
     && sed 's/NoProgressBar/#NoProgressBar/g' -i /etc/pacman.conf
 
 # update mirrorlist
-ADD https://raw.githubusercontent.com/greyltc/docker-archlinux/master/get-new-mirrors.sh /usr/bin/get-new-mirrors
-RUN chmod +x /usr/bin/get-new-mirrors
-RUN get-new-mirrors
+#ADD https://raw.githubusercontent.com/greyltc/docker-archlinux/master/get-new-mirrors.sh /usr/bin/get-new-mirrors
+#RUN chmod +x /usr/bin/get-new-mirrors
+#RUN get-new-mirrors
+RUN sed -i 's/^Server = https:\/\/.*/Server = https:\/\/archlinux.c3sl.ufpr.br\/$repo\/os\/$arch/' /etc/pacman.d/mirrorlist
 
 RUN pacman -Syyu --noconfirm \
         aardvark-dns \
@@ -43,9 +44,6 @@ RUN pacman -Syyu --noconfirm \
         mariadb-clients \
         memcached \
         neovim \
-        nodejs \
-        node-gyp \
-        npm \
         opencv \
         openssh \
         pgcli \
@@ -56,13 +54,8 @@ RUN pacman -Syyu --noconfirm \
         podman-dnsname \
         postgresql-libs \
         procs \
-        python-pip \
-        python-numpy \
-        python-pandas \
-        python-pygments \
         redis \
         ripgrep \
-        ruby \
         rust \
         starship \
         strace \
@@ -96,8 +89,8 @@ RUN mkdir -p /mnt/host
 FROM update-mirrors as build-helper-img
 ARG AUR_USER=builduser
 ARG HELPER=yay
-ARG LUNARVIM_VERSION=1.2
-ARG NEOVIM_VERSION=0.8
+ARG LUNARVIM_VERSION=1.3
+ARG NEOVIM_VERSION=0.9
 
 ADD helpers/add-aur.sh /root
 RUN bash /root/add-aur.sh ${AUR_USER} ${HELPER}
@@ -146,10 +139,13 @@ RUN source /opt/asdf-vm/asdf.sh \
     && asdf plugin-add ruby \
     && asdf plugin-add rust \
     && asdf plugin-add scala \
-    && asdf plugin-add zig 
+    && asdf plugin-add zig \
+    && asdf plugin-add python
 
-RUN LV_BRANCH="release-${LUNARVIM_VERSION}/neovim-${NEOVIM_VERSION}" \
-    bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/fc6873809934917b470bff1b072171879899a36b/utils/installer/install.sh) -y
+RUN source /opt/asdf-vm/asdf.sh && asdf install python latest && asdf install nodejs latest && asdf global python latest && asdf global nodejs latest
+
+RUN source /opt/asdf-vm/asdf.sh && LV_BRANCH="release-${LUNARVIM_VERSION}/neovim-${NEOVIM_VERSION}" \
+    bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh) -y
 
 RUN mkdir -p /etc/skel/.local/share \
     && mkdir -p /etc/skel/.local/bin \
